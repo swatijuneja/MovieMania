@@ -53,12 +53,17 @@
             android:text="@string/release_date"
             android:textColor="@color/white"
             app:layout_constraintStart_toEndOf="@+id/item_img" />
-
-        <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/baseline_favorite_24" />
     </LinearLayout>
+
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/myToggleButton"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:textOn=""
+        android:textOff=""/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
