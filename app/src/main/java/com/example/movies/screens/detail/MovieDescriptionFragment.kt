@@ -1,9 +1,11 @@
 package com.example.movies.screens.detail
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.example.movies.R
@@ -20,15 +22,15 @@ class MovieDescriptionFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentMovieDescriptionBinding.inflate(layoutInflater, container, false)
-        val movieItem = requireArguments().getParcelable<MovieItemModel>("MovieInfo")!!
+        val movieItem = requireArguments().getSerializable("MovieInfo", MovieItemModel::class.java)!!
         loadMovie(movieItem)
         return binding!!.root
     }
@@ -53,6 +55,5 @@ class MovieDescriptionFragment : Fragment() {
         super.onDestroy()
         binding = null
     }
-
 
 }

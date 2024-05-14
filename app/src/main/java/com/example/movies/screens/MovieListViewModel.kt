@@ -1,27 +1,23 @@
-package com.example.movies.screens.main
+package com.example.movies.screens
 
-import android.icu.text.CaseMap.Title
-import android.os.Bundle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.movies.R
 import com.example.movies.data.retrofit.MovieInterface
 import com.example.movies.data.room.MovieDao
-import com.example.movies.models.FavoriteMovie
 import com.example.movies.models.MovieItemModel
-import com.example.movies.screens.favorite.FavMovieFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MovieListViewModel(private val movieClient: MovieInterface, private val movieDao: MovieDao): ViewModel() {
+class MovieListViewModel(private val movieClient: MovieInterface?, private val movieDao: MovieDao): ViewModel() {
 
-    var movieList = MutableLiveData<List<MovieItemModel>>()
+    var movieList = MutableLiveData<MutableList<MovieItemModel>>()
+    var favMovieList = MutableLiveData<MutableList<MovieItemModel>>()
 
     fun getMovies() =
         CoroutineScope(Dispatchers.IO).launch {
-            movieList.postValue(movieClient
+            movieList.postValue(movieClient!!
                 .getTopRatedMovieList("Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZjU2Y2YwNTY5YTRjYWY3OGEyY2E2OTcwOTUwMDQ0NSIsInN1YiI6IjY2MjNjYjYzNjJmMzM1MDE2NGQ3YjAxYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.6zKI14GNVqPj-aEJR8ULli_TqGi9PLzrRzNvSGFaVpo")
                 .body()!!.results)
         }
@@ -32,12 +28,22 @@ class MovieListViewModel(private val movieClient: MovieInterface, private val mo
         }
     }
 
-    fun showFavMovieList(item: MovieItemModel) {
+    fun saveMovie(item: MovieItemModel) {
+        CoroutineScope(Dispatchers.IO).launch {
+            movieDao.saveFavMovie(item)
+        }
+    }
 
+    fun getFavMovie()  {
+        CoroutineScope(Dispatchers.IO).launch {
+            favMovieList.postValue(
+                movieDao.getAllFavMovies()
+            )
+        }
     }
 }
 
-class MovieViewModelFactory(private val client: MovieInterface, private val movieDao: MovieDao): ViewModelProvider.Factory {
+class MovieViewModelFactory(private val client: MovieInterface?, private val movieDao: MovieDao): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if(modelClass.isAssignableFrom(MovieListViewModel::class.java)) {
             return MovieListViewModel(client, movieDao) as T
