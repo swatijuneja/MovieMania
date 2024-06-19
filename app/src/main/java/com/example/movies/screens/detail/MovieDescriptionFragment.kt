@@ -18,21 +18,20 @@ import com.example.movies.models.MovieItemModel
  * create an instance of this fragment.
  */
 class MovieDescriptionFragment : Fragment() {
-    private var binding: FragmentMovieDescriptionBinding? = null
+    private lateinit var binding: FragmentMovieDescriptionBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentMovieDescriptionBinding.inflate(layoutInflater, container, false)
-        val movieItem = requireArguments().getSerializable("MovieInfo", MovieItemModel::class.java)!!
+        val movieItem = requireArguments().getParcelable<MovieItemModel>("MovieInfo")!!
         loadMovie(movieItem)
-        return binding!!.root
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -42,9 +41,9 @@ class MovieDescriptionFragment : Fragment() {
     private fun loadMovie(item: MovieItemModel) {
         Glide.with(requireContext()).load("https://image.tmdb.org/t/p/w185/${item.poster_path}")
             .placeholder(R.drawable.ic_launcher_background)
-            .into(binding!!.imageView2)
+            .into(binding.imageView2)
 
-        binding!!.apply {
+        binding.apply {
             movieTitle.text = item.title
             movieDate.text = item.release_date
             description.text = item.overview
@@ -53,7 +52,6 @@ class MovieDescriptionFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        binding = null
     }
 
 }

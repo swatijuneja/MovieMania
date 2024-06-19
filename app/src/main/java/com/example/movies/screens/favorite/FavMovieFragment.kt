@@ -28,10 +28,11 @@ class FavMovieFragment : Fragment() {
     private lateinit var binding: FragmentFavMovieBinding
     private lateinit var adapter: MovieListAdapter
     private lateinit var viewModel: MovieListViewModel
-    private lateinit var movieBuilder: MovieAppBuilder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val movieDao = MovieAppBuilder(requireContext()).builder.getDao()
+        viewModel = ViewModelProvider(this, MovieViewModelFactory(movieDao))[MovieListViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -39,18 +40,15 @@ class FavMovieFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentFavMovieBinding.inflate(layoutInflater, container, false)
-        movieBuilder = MovieAppBuilder(requireContext())
-        val movieDao = movieBuilder.builder.getDao()
-        viewModel = ViewModelProvider(this, MovieViewModelFactory(null, movieDao))[MovieListViewModel::class.java]
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = MovieListAdapter(this.requireActivity(), false, null, null)
+        binding.recyclerView.adapter = adapter
         viewModel.getFavMovie()
         populateFavMovie()
-        binding.recyclerView.adapter = adapter
     }
 
     private fun populateFavMovie() {

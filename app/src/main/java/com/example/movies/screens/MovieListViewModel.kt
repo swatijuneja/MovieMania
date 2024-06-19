@@ -1,52 +1,69 @@
 package com.example.movies.screens
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.movies.data.retrofit.MovieInterface
+import androidx.lifecycle.viewModelScope
+import com.example.movies.data.retrofit.RetrofitBuilder
+import com.example.movies.data.retrofit.RetrofitBuilder.token
 import com.example.movies.data.room.MovieDao
 import com.example.movies.models.MovieItemModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class MovieListViewModel(private val movieClient: MovieInterface?, private val movieDao: MovieDao): ViewModel() {
+class MovieListViewModel(private val movieDao: MovieDao): ViewModel() {
 
     var movieList = MutableLiveData<MutableList<MovieItemModel>>()
     var favMovieList = MutableLiveData<MutableList<MovieItemModel>>()
+    private var movieInterface = RetrofitBuilder.getMovieInterface()
 
-    fun getMovies() =
-        CoroutineScope(Dispatchers.IO).launch {
-            movieList.postValue(movieClient!!
-                .getTopRatedMovieList("Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZjU2Y2YwNTY5YTRjYWY3OGEyY2E2OTcwOTUwMDQ0NSIsInN1YiI6IjY2MjNjYjYzNjJmMzM1MDE2NGQ3YjAxYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.6zKI14GNVqPj-aEJR8ULli_TqGi9PLzrRzNvSGFaVpo")
-                .body()!!.results)
+    init {
+        getMovies()
+        getFavMovie()
+    }
+
+    private fun getMovies() =
+        viewModelScope.launch {
+            val movieModelList =  withContext(Dispatchers.IO) {
+                movieInterface.getTopRatedMovieList("Bearer $token").body()?.results
+            }
+            movieModelList?.let { movieList.postValue(it) }
         }
 
     fun deleteFavMovie(title: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            movieDao.removeFavMovie(title)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                movieDao.removeFavMovie(title)
+            }
         }
     }
 
     fun saveMovie(item: MovieItemModel) {
-        CoroutineScope(Dispatchers.IO).launch {
-            movieDao.saveFavMovie(item)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                movieDao.saveFavMovie(item)
+            }
         }
     }
 
     fun getFavMovie()  {
-        CoroutineScope(Dispatchers.IO).launch {
-            favMovieList.postValue(
-                movieDao.getAllFavMovies()
-            )
+        viewModelScope.launch {
+                val k = withContext(Dispatchers.IO) {
+                    movieDao.getAllFavMovies()
+                }
+
+            favMovieList.postValue(k)
+            //Log.d("Swati", "k size ${k.size}")
         }
     }
 }
 
-class MovieViewModelFactory(private val client: MovieInterface?, private val movieDao: MovieDao): ViewModelProvider.Factory {
+class MovieViewModelFactory(private val movieDao: MovieDao): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if(modelClass.isAssignableFrom(MovieListViewModel::class.java)) {
-            return MovieListViewModel(client, movieDao) as T
+            return MovieListViewModel(movieDao) as T
         }
         throw IllegalArgumentException("UNKNOWN VIEW MODEL CLASS")
     }

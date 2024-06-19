@@ -38,10 +38,10 @@ class MovieListAdapter(private val context: Context, private val isFav: Boolean,
 
         listener?.let { lis ->
             holder.itemView.setOnClickListener {
-                lis.onItemClick(movies[position])
+                lis.onItemClick(movies[position]) // nullable high order func
             }
         }
-        Log.d("Swati", "${movies[position].isFav}")
+        //Log.d("Swati", "${movies[position].isFav}")
 
         holder.binding.myToggleButton.apply {
             if (movies[position].isFav) {
@@ -94,7 +94,7 @@ class ClickListener(val movieItem: (item: MovieItemModel) -> Unit) {
     fun onItemClick(item: MovieItemModel) = movieItem(item)
 }
 
-interface AdapterCallback {
+interface AdapterCallback { // high order func
     fun onClick(title: String)
     fun onFavItemClick(item: MovieItemModel)
 }

@@ -1,6 +1,7 @@
 package com.example.movies
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("Swati", "Activity onCreate")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -26,8 +28,20 @@ class MainActivity : AppCompatActivity() {
 
         setOptionMenu()
 
-        supportFragmentManager.beginTransaction().add(R.id.frameLayout, MovieListFragment())
-            .addToBackStack(null).commit()
+        if(savedInstanceState == null) {
+            supportFragmentManager.beginTransaction().add(R.id.frameLayout, MovieListFragment())
+                .addToBackStack(null).commit()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("Swati", "Activity onStop")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("Swati", "Activity onDestroy")
     }
 
     private fun setOptionMenu() {

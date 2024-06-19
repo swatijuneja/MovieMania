@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.movies.R
-import com.example.movies.data.retrofit.MovieApiClient
 import com.example.movies.data.room.MovieAppBuilder
 import com.example.movies.databinding.FragmentMovieListBinding
 import com.example.movies.models.MovieItemModel
@@ -19,6 +18,7 @@ import com.example.movies.screens.detail.MovieDescriptionFragment
 import com.example.movies.screens.MovieListViewModel
 import com.example.movies.screens.MovieViewModelFactory
 import com.example.movies.screens.favorite.FavMovieFragment
+import kotlinx.coroutines.runBlocking
 
 /**
  * A simple [Fragment] subclass.
@@ -26,61 +26,62 @@ import com.example.movies.screens.favorite.FavMovieFragment
  * create an instance of this fragment.
  */
 class MovieListFragment : Fragment(), AdapterCallback {
-    private var binding: FragmentMovieListBinding? = null
+    private lateinit var binding: FragmentMovieListBinding
     private lateinit var adapter: MovieListAdapter
     private lateinit var viewModel: MovieListViewModel
-    private lateinit var movieBuilder: MovieAppBuilder
     private var favMovieMap = mapOf<Int, MovieItemModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("Swati", "Fragment onCreate")
+        val movieDao = MovieAppBuilder(requireContext()).builder.getDao()
+        viewModel = ViewModelProvider(this, MovieViewModelFactory(movieDao))[MovieListViewModel::class.java]
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d("Swati", "Fragment onCreateView")
         binding = FragmentMovieListBinding.inflate(layoutInflater, container, false)
-        val movieClient = MovieApiClient().movieInterface
-        movieBuilder = MovieAppBuilder(requireContext())
-        val movieDao = movieBuilder.builder.getDao()
-        viewModel = ViewModelProvider(this, MovieViewModelFactory(movieClient, movieDao))[MovieListViewModel::class.java]
         adapter = MovieListAdapter(requireActivity(), true, ClickListener {
             onItemClick(it) }, this)
-
-        binding!!.recyclerView.adapter = adapter
-        return binding!!.root
+        binding.recyclerView.adapter = adapter
+        populateMovieList()
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("Swati", "onViewCreated")
-        populateMovieList()
+        Log.d("Swati", "Fragment onViewCreated")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        binding = null
+        Log.d("Swati", "Fragment onDestroy")
     }
 
     private fun populateMovieList() {
-        viewModel.getMovies()
+        runBlocking {
         viewModel.movieList.observe(requireActivity()) { movieList ->
-            viewModel.getFavMovie()
             viewModel.favMovieList.observe(requireActivity()) { favList ->
+                Log.d("Swati", "favList ${favList.size}")
                 favMovieMap = favList.associateBy { it.id }
             }
-
-            adapter.addList(movieList.map { item ->
+            val k = movieList.map { item ->
                 favMovieMap[item.id] ?: item
-            }.toMutableList())
+            }.toMutableList()
+
+            Log.d("Swati", "final list  ${k.size}")
+            adapter.addList(k)
+        }
         }
     }
 
     private fun onItemClick(item: MovieItemModel) {
         val movieDescriptionFragment = MovieDescriptionFragment()
         movieDescriptionFragment.arguments = Bundle().apply {
-            putSerializable("MovieInfo", item)
+            putParcelable("MovieInfo", item)
         }
         requireActivity().supportFragmentManager.beginTransaction()
             .replace(R.id.frameLayout, movieDescriptionFragment)
